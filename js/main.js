@@ -36,7 +36,6 @@ function Ship(pos) {
 	this.flames.style = {
 		strokeWidth: 1
 	}
-	console.log(this.flames.strokeColor);
 	this.group = new Group([this.shipPath, this.flames]);
 	this.velocity = new Point(0, -1);
 	this.steering = new Point(0, -1);
@@ -46,6 +45,7 @@ function Ship(pos) {
 	}
 	this.drive = function() {
 		this.group.position += this.velocity;
+		this.group.position = toroid(this, view);
 	}
 	this.thrust = function() {
 		this.flames.strokeColor = 'black';
@@ -55,15 +55,21 @@ function Ship(pos) {
 	this.stopThrust = function() {
 		this.flames.strokeColor = 'black';
 	}
+	this.path = new Path({
+		strokeColor: '#ddd',
+		strokeWidth: 1
+	});
+	this.renewPath = function() {
+		this.path = new Path({
+			strokeColor: '#ddd',
+			strokeWidth: 1
+		});
+	}
 }
 
 var ship = new Ship();
 
 
-var path = new Path({
-	strokeColor: '#ddd',
-	strokeWidth: 1
-});
 
 
 
@@ -71,7 +77,7 @@ var path = new Path({
 // Every frame occurrence 
 function onFrame(event) {
 
-	path.add(centroid(ship.shipPath));
+	ship.path.add(centroid(ship.shipPath));
 
 	for (var i = 0; i < keys.length; i++) {
 
@@ -93,7 +99,6 @@ function onFrame(event) {
 		}
 	}
 	ship.drive();
-
 
 
 	/// This makes it curve round in a pwetty pattern
@@ -129,4 +134,30 @@ function centroid(ship) {
 	var opposite = segments[1].point - (segments[1].point - segments[3].point) / 2;
 	var c = vertex + (opposite - vertex) * 2 / 3;
 	return c;
+}
+
+function loopCood(shipC, bound) {
+	if (shipC < 0 || shipC > bound) {
+		if (shipC < 0) {
+			return bound;
+		} else if (shipC > bound) {
+			return 0;
+		}
+	}
+	return shipC;
+}
+
+
+function toroid(ship, view) {
+	var pos = ship.group.position;
+	var posNew = {
+		x: pos.x,
+		y: pos.y
+	}
+	posNew.x = loopCood(pos.x, view.bounds.width);
+	posNew.y = loopCood(pos.y, view.bounds.height);
+	if ((pos.x === posNew.x && pos.y === posNew.y) === false) {
+		ship.renewPath();
+	}
+	return posNew;
 }
