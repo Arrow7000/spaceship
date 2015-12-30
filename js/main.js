@@ -1,55 +1,59 @@
-var keys = [];
+var keys = [],
+	counter = 0;
 
-// var flameLine = new Path.Line({
-// 	segments: [segments[2], segments[2] + new Point(0, 20)],
-// 	strokeColor: 'yellow',
-// 	strokeWidth: 1
-// });
-// var shipPath = new Path.Line({
-// 	segments: segments,
-// 	closed: true,
-// 	strokeColor: '#eee',
-// 	strokeWidth: 2
-// });
 
 
 function Ship(pos) {
 	var position = pos ? pos : view.center;
+	var exhaust = new Point(position) + new Point(0, 4.5);
 	var segments = [
-			new Point(position) + new Point(0, -7.5), // Front of ship
-			new Point(position) + new Point(-5, 7.5), // Back left
-			new Point(position) + new Point(0, 3.5), // Rear exhaust indentation
-			new Point(position) + new Point(5, 7.5) // Back right
-		]
-		// this.exhaust = new Point(position) + new Point(0, 3.5);
+		new Point(position) + new Point(0, -7.5), // Front of ship
+		new Point(position) + new Point(-5, 7.5), // Back left
+		exhaust + new Point(0, -1), // Rear exhaust indentation
+		new Point(position) + new Point(5, 7.5) // Back right
+	]
 	this.shipPath = new Path.Line({
 		segments: segments,
 		closed: true,
 		strokeColor: '#eee',
 		strokeWidth: 2
 	});
-	// this.flame = new Path.Line({
-	// 	segments: [this.shipPath.position, this.shipPath.position + new Point(0, 20)],
-	// 	strokeColor: 'yellow',
-	// 	strokeWidth: 1
-	// });
-	this.group = new Group([this.shipPath]);
+	this.flames = new Group([
+		new Path.Line({
+			from: exhaust,
+			to: exhaust + new Point(0, 12.5)
+		}),
+		new Path.Line({
+			from: exhaust,
+			to: exhaust + new Point(-1, 10)
+		}).rotate(-15, exhaust),
+		new Path.Line({
+			from: exhaust,
+			to: exhaust + new Point(1, 10)
+		}).rotate(15, exhaust)
+
+	]);
+	this.flames.style = {
+		strokeWidth: 1
+	}
+	console.log(this.flames.strokeColor);
+	this.group = new Group([this.shipPath, this.flames]);
 	this.velocity = new Point(0, -1);
 	this.steering = new Point(0, -1);
 	this.rot = function(ang) {
 		this.steering.angle += ang;
-		this.shipPath.rotate(ang, this.shipPath.position);
-		// this.exhaust.rotate(ang, this.group.position);
-		// this.flame.rotate(ang, this.group.position);
+		this.group.rotate(ang, centroid(this.shipPath));
 	}
 	this.drive = function() {
-		this.shipPath.position += this.velocity;
-		// this.exhaust += this.velocity;
-		// console.log("this.exhaust", this.exhaust);
-		// console.log("this.flame", this.flame.segments[0]);
-		// this.flame.position += this.velocity;
-		// this.flame.scale(.98 + Math.random() * .4);
-		// this.flame.scale(1.005, this.shipPath.position);
+		this.group.position += this.velocity;
+	}
+	this.thrust = function() {
+		this.flames.strokeColor = 'black';
+		var flame = Math.floor(Math.random() * 3);
+		this.flames.children[flame].style.strokeColor = 'yellow';
+	}
+	this.stopThrust = function() {
+		this.flames.strokeColor = 'black';
 	}
 }
 
@@ -67,19 +71,20 @@ var path = new Path({
 // Every frame occurrence 
 function onFrame(event) {
 
-	path.add(ship.shipPath.position);
+	path.add(centroid(ship.shipPath));
 
 	for (var i = 0; i < keys.length; i++) {
 
 		switch (keys[i]) {
 			case 38: // Up
-				if (true) ship.velocity += ship.steering / 10;
+				ship.thrust();
+				ship.velocity += ship.steering / 10;
 				break;
 			case 39: // Right
 				ship.rot(5);
 				break;
 			case 40: // Down
-				if (true) ship.velocity -= ship.steering / 10;
+				// if (ship.velocity.length > 0) ship.velocity -= ship.steering / 10;
 				break;
 			case 37: // Left
 				ship.rot(-5);
@@ -87,15 +92,7 @@ function onFrame(event) {
 			default:
 		}
 	}
-	// console.log("Angle", ship.velocity.angle, "\nSpeed", ship.velocity.length);
-	// console.log(keys);
-	// console.log(ship.group.children[1].lastSegment);
-	// ship.group.children[1].scale(1.01, ship.group.children[1].lastSegment);
 	ship.drive();
-
-
-
-
 
 
 
@@ -103,6 +100,7 @@ function onFrame(event) {
 	// ship.velocity.angle += 1 / 2 + Math.sin(event.count / 50);
 	// ship.position += ship.velocity;
 	// console.log("angle", ship.velocity.angle);
+	counter++;
 }
 
 
@@ -121,4 +119,14 @@ document.onkeyup = function(e) {
 	if (index > -1) {
 		keys.splice(index, 1);
 	}
+	ship.stopThrust();
+}
+
+
+function centroid(ship) {
+	var segments = ship.segments;
+	var vertex = segments[0].point;
+	var opposite = segments[1].point - (segments[1].point - segments[3].point) / 2;
+	var c = vertex + (opposite - vertex) * 2 / 3;
+	return c;
 }
