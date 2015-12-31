@@ -1,5 +1,10 @@
 var keys = [],
-	counter = 0;
+	counter = 0,
+	pathStyle = {
+		strokeColor: '#ddd',
+		strokeWidth: 1,
+		opacity: .1
+	};
 
 
 
@@ -34,7 +39,12 @@ function Ship(pos) {
 
 	]);
 	this.flames.style = {
-		strokeWidth: 1
+		strokeWidth: 1,
+		strokeColor: 'yellow'
+	}
+	this.flames.bringToFront();
+	for (var i = 0; i < this.flames.children.length; i++) {
+		this.flames.children[i].opacity = 0;
 	}
 	this.group = new Group([this.shipPath, this.flames]);
 	this.velocity = new Point(0, -1);
@@ -48,22 +58,22 @@ function Ship(pos) {
 		this.group.position = toroid(this, view);
 	}
 	this.thrust = function() {
-		this.flames.strokeColor = 'black';
+		for (var i = 0; i < this.flames.children.length; i++) {
+			this.flames.children[i].opacity = 0;
+		}
 		var flame = Math.floor(Math.random() * 3);
-		this.flames.children[flame].style.strokeColor = 'yellow';
+		this.flames.children[flame].opacity = 1;
+		console.log("Flame children opacity", this.flames.children[flame].opacity);
+		console.log("Flames opacity", this.flames.opacity);
 	}
 	this.stopThrust = function() {
-		this.flames.strokeColor = 'black';
+		for (var i = 0; i < this.flames.children.length; i++) {
+			this.flames.children[i].opacity = 0;
+		}
 	}
-	this.path = new Path({
-		strokeColor: '#ddd',
-		strokeWidth: 1
-	});
+	this.path = new Path(pathStyle);
 	this.renewPath = function() {
-		this.path = new Path({
-			strokeColor: '#ddd',
-			strokeWidth: 1
-		});
+		this.path = new Path(pathStyle);
 	}
 }
 
@@ -99,6 +109,7 @@ function onFrame(event) {
 		}
 	}
 	ship.drive();
+	// gravity([ship]);
 
 
 	/// This makes it curve round in a pwetty pattern
@@ -127,7 +138,7 @@ document.onkeyup = function(e) {
 	ship.stopThrust();
 }
 
-
+/// Functions
 function centroid(ship) {
 	var segments = ship.segments;
 	var vertex = segments[0].point;
@@ -136,6 +147,7 @@ function centroid(ship) {
 	return c;
 }
 
+// Checks if ship's given coordinate is out of bounds and returns coordinate on opposite side
 function loopCood(shipC, bound) {
 	if (shipC < 0 || shipC > bound) {
 		if (shipC < 0) {
@@ -147,7 +159,7 @@ function loopCood(shipC, bound) {
 	return shipC;
 }
 
-
+// Full 2D toroidal function, returns the new position for any position of the ship
 function toroid(ship, view) {
 	var pos = ship.group.position;
 	var posNew = {
@@ -160,4 +172,13 @@ function toroid(ship, view) {
 		ship.renewPath();
 	}
 	return posNew;
+}
+
+function gravity(ships) {
+	for (var i = 0; i < ships.length; i++) {
+		var ship = ships[i];
+		if (ship.group.position.y < view.bounds.height - 10) {
+			ship.velocity += new Point(0, .05);
+		}
+	}
 }
