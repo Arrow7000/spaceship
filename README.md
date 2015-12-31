@@ -1,7 +1,7 @@
 # Spaceship
 An experiment in PaperJS to become familiar with simulating realistic motion, including conservation of momentum, forces and acceleration. 
 
-![Screenshot of the game](http://url/to/img.png)
+![Screenshot of the game](docs/screencap-1.png)
 
 # Play
 View the project live at [aronadler.com/spaceship](docs/screencap-1.png).
