@@ -1,7 +1,7 @@
-# Asteroid
-An experiment - loosely based on the classic game Asteroid - in PaperJS to become familiar with realistic motion, including momentum and acceleration
+# Spaceship
+An experiment in PaperJS to become familiar with simulating realistic motion, including conservation of momentum, forces and acceleration. 
 
 # Play
-View the project live at [aronadler.com/asteroid](http://aronadler.com/asteroid/).
+View the project live at [aronadler.com/spaceship](http://aronadler.com/spaceship/).
 ## Controls
-Up and down arrow keys accelerate and decelerate the ship. Left and right arrow keys to rotate the ship. 
+The up arrow keys accelerates the ship in the direction it is pointing towards. Left and right arrow keys rotate the ship. 
